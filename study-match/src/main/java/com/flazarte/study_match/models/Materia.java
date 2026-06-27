@@ -23,4 +23,6 @@ public class Materia {
 
     @Column(nullable = false, unique = true, length = 20)
     private String codigo;
+
+    private Integer semestre;
 }

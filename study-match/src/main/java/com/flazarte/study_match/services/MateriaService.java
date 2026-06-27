@@ -29,6 +29,7 @@ public class MateriaService {
             dto.setId(materia.getId());
             dto.setNombre(materia.getNombre());
             dto.setCodigo(materia.getCodigo());
+            dto.setSemestre(materia.getSemestre());
             return dto;
         }).collect(Collectors.toList());
     }
