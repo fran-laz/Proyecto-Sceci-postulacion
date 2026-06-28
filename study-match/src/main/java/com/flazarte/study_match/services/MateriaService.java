@@ -34,15 +34,15 @@ public class MateriaService {
         }).collect(Collectors.toList());
     }
 
-    public List<GrupoMateriaResponseDTO> obtenerGruposPorMateria(Long materiaId) {
-        List<GrupoMateria> grupos = grupoMateriaRepository.findByMateriaId(materiaId);
+    public List<GrupoMateriaResponseDTO> obtenerGruposPorMateria(Long materiaId, Long carreraId) {
+        List<GrupoMateria> grupos = grupoMateriaRepository.findByMateriaIdAndCarrerasId(materiaId, carreraId);
 
         return grupos.stream().map(grupo -> {
             GrupoMateriaResponseDTO dto = new GrupoMateriaResponseDTO();
             dto.setId(grupo.getId());
             dto.setNumeroGrupo(grupo.getNumeroGrupo());
             dto.setNombreDocente(grupo.getNombreDocente());
-            dto.setMateriaId(grupo.getMateria().getId()); // Solo sacamos el ID por seguridad
+            dto.setMateriaId(grupo.getMateria().getId());
             return dto;
         }).collect(Collectors.toList());
     }

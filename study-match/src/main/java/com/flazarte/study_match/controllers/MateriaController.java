@@ -2,33 +2,30 @@ package com.flazarte.study_match.controllers;
 
 import com.flazarte.study_match.dtos.materia.GrupoMateriaResponseDTO;
 import com.flazarte.study_match.dtos.materia.MateriaResponseDTO;
-import com.flazarte.study_match.services.MateriaService;
+import com.flazarte.study_match.services.MateriaService; // ¡No olvides este import!
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/materias")
 public class MateriaController {
-
     @Autowired
     private MateriaService materiaService;
 
-
     @GetMapping
-    public ResponseEntity<List<MateriaResponseDTO>> listarMaterias() {
-        List<MateriaResponseDTO> materias = materiaService.obtenerTodasLasMaterias();
-        return ResponseEntity.ok(materias); // Retorna un estado HTTP 200 OK con la lista
+    public ResponseEntity<List<MateriaResponseDTO>> listarMaterias(@RequestParam Long carreraId) {
+        List<MateriaResponseDTO> respuesta = materiaService.obtenerTodasLasMaterias();
+        return ResponseEntity.ok(respuesta);
     }
 
     @GetMapping("/{id}/grupos")
-    public ResponseEntity<List<GrupoMateriaResponseDTO>> listarGruposPorMateria(@PathVariable Long id) {
-        List<GrupoMateriaResponseDTO> grupos = materiaService.obtenerGruposPorMateria(id);
+    public ResponseEntity<List<GrupoMateriaResponseDTO>> listarGruposPorMateria(
+            @PathVariable Long id,
+            @RequestParam Long carreraId) {
+        List<GrupoMateriaResponseDTO> grupos = materiaService.obtenerGruposPorMateria(id, carreraId);
         return ResponseEntity.ok(grupos);
     }
 }

@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface GrupoMateriaRepository extends JpaRepository<GrupoMateria, Long> {
-    List<GrupoMateria> findByMateriaId(Long materiaId);
+    List<GrupoMateria> findByMateriaIdAndCarrerasId(Long materiaId, Long carreraId);
 }

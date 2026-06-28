@@ -4,8 +4,9 @@ import com.flazarte.study_match.models.Materia;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface MateriaRepository extends JpaRepository<Materia, Long> {
-    Optional<Materia> findByCodigo(String codigo);
+    List<Materia> findByCarrerasId(Long carreraId);
 }
