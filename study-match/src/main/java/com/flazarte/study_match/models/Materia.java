@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.util.Set;
+import java.util.HashSet;
 
 @Entity
 @Table(name = "materias")
@@ -25,4 +27,12 @@ public class Materia {
     private String codigo;
 
     private Integer semestre;
+    @ManyToMany
+    @JoinTable(
+            name = "carrera_materia",
+            joinColumns = @JoinColumn(name = "materia_id"),
+            inverseJoinColumns = @JoinColumn(name = "carrera_id")
+    )
+    private Set<Carrera> carreras = new HashSet<>();
+
 }

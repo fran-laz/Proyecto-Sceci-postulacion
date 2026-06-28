@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import java.util.Set;
+import java.util.HashSet;
 @Entity
 @Table(name = "grupos_materias")
 @Getter
@@ -27,4 +28,12 @@ public class GrupoMateria {
     @ManyToOne
     @JoinColumn(name = "materia_id", nullable = false)
     private Materia materia;
+
+    @ManyToMany
+    @JoinTable(
+            name = "grupo_carrera", // Tabla intermedia para el control de paralelos
+            joinColumns = @JoinColumn(name = "grupo_materia_id"),
+            inverseJoinColumns = @JoinColumn(name = "carrera_id")
+    )
+    private Set<Carrera> carreras = new HashSet<>();
 }
