@@ -8,4 +8,5 @@ public class MateriaResponseDTO {
     private String nombre;
     private String codigo;
     private Integer semestre;
+    private String carrerasHabilitadas;
 }

@@ -8,6 +8,7 @@ import com.flazarte.study_match.repositories.GrupoMateriaRepository;
 import com.flazarte.study_match.repositories.MateriaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,8 +22,9 @@ public class MateriaService {
     @Autowired
     private GrupoMateriaRepository grupoMateriaRepository;
 
-    public List<MateriaResponseDTO> obtenerTodasLasMaterias() {
-        List<Materia> materias = materiaRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<MateriaResponseDTO> obtenerMateriasPorCarrera(Long carreraId) {
+        List<Materia> materias = materiaRepository.findByCarrerasId(carreraId);
 
         return materias.stream().map(materia -> {
             MateriaResponseDTO dto = new MateriaResponseDTO();
@@ -30,10 +32,16 @@ public class MateriaService {
             dto.setNombre(materia.getNombre());
             dto.setCodigo(materia.getCodigo());
             dto.setSemestre(materia.getSemestre());
+            String textoCarreras = materia.getCarreras().stream()
+                    .map(carrera -> carrera.getNombre())
+                    .collect(Collectors.joining(" y "));
+            dto.setCarrerasHabilitadas(textoCarreras);
+
             return dto;
         }).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<GrupoMateriaResponseDTO> obtenerGruposPorMateria(Long materiaId, Long carreraId) {
         List<GrupoMateria> grupos = grupoMateriaRepository.findByMateriaIdAndCarrerasId(materiaId, carreraId);
 
@@ -43,6 +51,12 @@ public class MateriaService {
             dto.setNumeroGrupo(grupo.getNumeroGrupo());
             dto.setNombreDocente(grupo.getNombreDocente());
             dto.setMateriaId(grupo.getMateria().getId());
+
+            String textoCarreras = grupo.getCarreras().stream()
+                    .map(carrera -> carrera.getNombre())
+                    .collect(Collectors.joining(" y "));
+            dto.setCarrerasHabilitadas(textoCarreras);
+
             return dto;
         }).collect(Collectors.toList());
     }

@@ -17,7 +17,7 @@ public class MateriaController {
 
     @GetMapping
     public ResponseEntity<List<MateriaResponseDTO>> listarMaterias(@RequestParam Long carreraId) {
-        List<MateriaResponseDTO> respuesta = materiaService.obtenerTodasLasMaterias();
+        List<MateriaResponseDTO> respuesta = materiaService.obtenerMateriasPorCarrera(carreraId);
         return ResponseEntity.ok(respuesta);
     }
 

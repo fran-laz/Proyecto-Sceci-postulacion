@@ -8,4 +8,5 @@ public class GrupoMateriaResponseDTO {
     private String numeroGrupo;
     private String nombreDocente;
     private Long materiaId;
+    private String carrerasHabilitadas;
 }
