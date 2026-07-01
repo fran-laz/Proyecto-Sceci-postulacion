@@ -5,9 +5,11 @@ import com.flazarte.study_match.dtos.proyecto.ProyectoResponseDTO;
 import com.flazarte.study_match.models.GrupoMateria;
 import com.flazarte.study_match.models.Perfil;
 import com.flazarte.study_match.models.Proyecto;
+import com.flazarte.study_match.models.Usuario;
 import com.flazarte.study_match.repositories.GrupoMateriaRepository;
 import com.flazarte.study_match.repositories.PerfilRepository;
 import com.flazarte.study_match.repositories.ProyectoRepository;
+import com.flazarte.study_match.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +28,15 @@ public class ProyectoService {
     @Autowired
     private GrupoMateriaRepository grupoMateriaRepository;
 
-    public ProyectoResponseDTO crearProyecto(ProyectoRequestDTO dto) {
-        Perfil creador = perfilRepository.findById(dto.getCreadorId())
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    public ProyectoResponseDTO crearProyecto(ProyectoRequestDTO dto, String emailUsuario) {
+
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new RuntimeException("Error: Cuenta de usuario no encontrada"));
+
+        Perfil creador = perfilRepository.findByUsuario(usuario)
                 .orElseThrow(() -> new RuntimeException("Error: Perfil del creador no encontrado"));
 
         GrupoMateria grupoMateria = grupoMateriaRepository.findById(dto.getGrupoMateriaId())
@@ -38,7 +47,7 @@ public class ProyectoService {
         proyecto.setDescripcion(dto.getDescripcion());
         proyecto.setMaximoIntegrantes(dto.getMaximoIntegrantes());
         proyecto.setFechaLimite(dto.getFechaLimite());
-        proyecto.setCreador(creador);
+        proyecto.setCreador(creador); // Asignamos al creador real y autenticado
         proyecto.setGrupoMateria(grupoMateria);
 
         Proyecto proyectoGuardado = proyectoRepository.save(proyecto);
