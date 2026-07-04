@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface MateriaRepository extends JpaRepository<Materia, Long> {
-    List<Materia> findByCarrerasId(Long carreraId);
+    List<Materia> findAllByOrderBySemestreAsc();
 }

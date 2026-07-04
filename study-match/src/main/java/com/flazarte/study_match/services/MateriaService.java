@@ -24,7 +24,7 @@ public class MateriaService {
 
     @Transactional(readOnly = true)
     public List<MateriaResponseDTO> obtenerMateriasPorCarrera(Long carreraId) {
-        List<Materia> materias = materiaRepository.findByCarrerasId(carreraId);
+        List<Materia> materias = materiaRepository.findAllByOrderBySemestreAsc();
 
         return materias.stream().map(materia -> {
             MateriaResponseDTO dto = new MateriaResponseDTO();
