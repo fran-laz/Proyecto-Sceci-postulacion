@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 export default function Login() {
-  // Estados para guardar lo que el usuario escribe
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -48,7 +47,6 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required 
               style={styles.input}
-              placeholder="ejemplo@umss.edu.bo"
             />
           </div>
 
