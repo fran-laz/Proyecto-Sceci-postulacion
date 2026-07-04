@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.flazarte.study_match.services.MateriaService;
 import java.util.List;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/materias")
@@ -16,8 +17,8 @@ public class MateriaController {
 
     @GetMapping
     public ResponseEntity<List<MateriaResponseDTO>> listarMaterias(@RequestParam Long carreraId) {
-        List<MateriaResponseDTO> respuesta = materiaService.obtenerMateriasPorCarrera(carreraId);
-        return ResponseEntity.ok(respuesta);
+        List<MateriaResponseDTO> materiasFiltradas = materiaService.obtenerMateriasPorCarrera(carreraId);
+        return ResponseEntity.ok(materiasFiltradas);
     }
 
     @GetMapping("/{id}/grupos")
