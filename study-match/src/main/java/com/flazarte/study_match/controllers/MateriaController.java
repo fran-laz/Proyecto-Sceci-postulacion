@@ -1,16 +1,15 @@
 package com.flazarte.study_match.controllers;
-
 import com.flazarte.study_match.dtos.materia.GrupoMateriaResponseDTO;
 import com.flazarte.study_match.dtos.materia.MateriaResponseDTO;
-import com.flazarte.study_match.services.MateriaService; // ¡No olvides este import!
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.flazarte.study_match.services.MateriaService;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/materias")
+@CrossOrigin(origins = "*")
 public class MateriaController {
     @Autowired
     private MateriaService materiaService;

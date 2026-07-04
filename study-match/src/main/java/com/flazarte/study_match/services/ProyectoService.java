@@ -47,9 +47,8 @@ public class ProyectoService {
         proyecto.setDescripcion(dto.getDescripcion());
         proyecto.setMaximoIntegrantes(dto.getMaximoIntegrantes());
         proyecto.setFechaLimite(dto.getFechaLimite());
-        proyecto.setCreador(creador); // Asignamos al creador real y autenticado
+        proyecto.setCreador(creador); 
         proyecto.setGrupoMateria(grupoMateria);
-
         Proyecto proyectoGuardado = proyectoRepository.save(proyecto);
         return convertirADTO(proyectoGuardado);
     }
@@ -73,5 +72,22 @@ public class ProyectoService {
         dto.setNumeroGrupo(proyecto.getGrupoMateria().getNumeroGrupo());
 
         return dto;
+    }
+    public List<ProyectoResponseDTO> obtenerProyectosPorEstudiante(String email) {
+        List<Proyecto> proyectos = proyectoRepository.findByCreador_Usuario_Email(email);
+
+        return proyectos.stream().map(proyecto -> {
+            ProyectoResponseDTO dto = new ProyectoResponseDTO();
+            dto.setId(proyecto.getId());
+            dto.setTitulo(proyecto.getTitulo());
+            dto.setDescripcion(proyecto.getDescripcion());
+            dto.setMaximoIntegrantes(proyecto.getMaximoIntegrantes());
+            dto.setFechaLimite(proyecto.getFechaLimite());
+            dto.setNombreCreador(proyecto.getCreador().getNombres() + " " + proyecto.getCreador().getApellidos());
+            dto.setNombreMateria(proyecto.getGrupoMateria().getMateria().getNombre());
+            dto.setNumeroGrupo(proyecto.getGrupoMateria().getNumeroGrupo());
+
+            return dto;
+        }).toList();
     }
 }

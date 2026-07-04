@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface ProyectoRepository extends JpaRepository<Proyecto, Long> {
-    List<Proyecto> findByGrupoMateriaMateriaId(Long materiaId);
+    List<Proyecto> findByCreador_Usuario_Email(String email);
 }

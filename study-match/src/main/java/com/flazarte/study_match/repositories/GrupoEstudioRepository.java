@@ -7,5 +7,5 @@ import java.util.List;
 
 @Repository
 public interface GrupoEstudioRepository extends JpaRepository<GrupoEstudio, Long> {
-    List<GrupoEstudio> findByGrupoMateriaMateriaId(Long materiaId);
+    List<GrupoEstudio> findByCreador_Usuario_Email(String email);
 }

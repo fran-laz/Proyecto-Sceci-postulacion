@@ -10,8 +10,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/proyectos")
+@CrossOrigin(origins = "*")
 public class ProyectoController {
 
     @Autowired
@@ -28,5 +31,13 @@ public class ProyectoController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+    @GetMapping("/mis-proyectos")
+    public ResponseEntity<List<ProyectoResponseDTO>> misProyectos() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String emailLogueado = authentication.getName();
+
+        List<ProyectoResponseDTO> misProyectos = proyectoService.obtenerProyectosPorEstudiante(emailLogueado);
+        return ResponseEntity.ok(misProyectos);
     }
 }
