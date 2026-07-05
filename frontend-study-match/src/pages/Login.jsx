@@ -11,7 +11,7 @@ export default function Login() {
     setError(''); 
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch('https://study-match-backend-zw6y.onrender.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

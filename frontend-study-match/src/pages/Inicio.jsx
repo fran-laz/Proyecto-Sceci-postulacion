@@ -28,9 +28,9 @@ export default function Inicio() {
       try {
         const headers = { 'Authorization': `Bearer ${token}` };
         
-        const resProyectos = await fetch('http://localhost:8080/api/proyectos/mis-proyectos', { headers });
-        const resGrupos = await fetch('http://localhost:8080/api/grupos-estudio/mis-grupos', { headers });
-        const resSolicitudes = await fetch('http://localhost:8080/api/solicitudes/mis-pendientes', { headers });
+        const resProyectos = await fetch('https://study-match-backend-zw6y.onrender.com/api/proyectos/mis-proyectos', { headers });
+        const resGrupos = await fetch('https://study-match-backend-zw6y.onrender.com/api/grupos-estudio/mis-grupos', { headers });
+        const resSolicitudes = await fetch('https://study-match-backend-zw6y.onrender.com/api/solicitudes/mis-pendientes', { headers });
 
         if (resProyectos.ok && resGrupos.ok) {
           setProyectos(await resProyectos.json());
@@ -51,7 +51,7 @@ export default function Inicio() {
 
   const handleResponderSolicitud = async (solicitudId, accion) => {
     try {
-      const res = await fetch(`http://localhost:8080/api/solicitudes/${solicitudId}/responder?accion=${accion}`, {
+      const res = await fetch(`https://study-match-backend-zw6y.onrender.com/api/solicitudes/${solicitudId}/responder?accion=${accion}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -77,8 +77,8 @@ export default function Inicio() {
     
     try {
       const url = tipo === 'proyecto' 
-        ? `http://localhost:8080/api/proyectos/${id}/integrantes` 
-        : `http://localhost:8080/api/grupos-estudio/${id}/integrantes`;
+        ? `https://study-match-backend-zw6y.onrender.com/api/proyectos/${id}/integrantes` 
+        : `https://study-match-backend-zw6y.onrender.com/api/grupos-estudio/${id}/integrantes`;
         
       const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
       if (res.ok) {
@@ -91,7 +91,7 @@ export default function Inicio() {
   const handleEliminarProyecto = async (id) => {
     if (window.confirm("¿Seguro que deseas eliminar este proyecto?")) {
       try {
-        const res = await fetch(`http://localhost:8080/api/proyectos/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(`https://study-match-backend-zw6y.onrender.com/api/proyectos/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         if (res.ok) setProyectos(proyectos.filter(p => p.id !== id));
       } catch (err) {}
     }
@@ -100,7 +100,7 @@ export default function Inicio() {
   const handleEliminarGrupo = async (id) => {
     if (window.confirm("¿Seguro que deseas eliminar este grupo?")) {
       try {
-        const res = await fetch(`http://localhost:8080/api/grupos-estudio/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+        const res = await fetch(`https://study-match-backend-zw6y.onrender.com/api/grupos-estudio/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
         if (res.ok) setGrupos(grupos.filter(g => g.id !== id));
       } catch (err) {}
     }

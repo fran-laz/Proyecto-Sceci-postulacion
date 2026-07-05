@@ -21,7 +21,7 @@ export default function Dashboard() {
   const token = localStorage.getItem('token');
   useEffect(() => {
     if (carreraId) {
-      fetch(`http://localhost:8080/api/materias?carreraId=${carreraId}`, {
+      fetch(`https://study-match-backend-zw6y.onrender.com/api/materias?carreraId=${carreraId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (materiaId && carreraId) {
-      fetch(`http://localhost:8080/api/materias/${materiaId}/grupos?carreraId=${carreraId}`, {
+      fetch(`https://study-match-backend-zw6y.onrender.com/api/materias/${materiaId}/grupos?carreraId=${carreraId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -70,7 +70,7 @@ export default function Dashboard() {
     e.preventDefault();
 
     if (accion === 'crear') {
-      let url = tipo === 'proyecto' ? 'http://localhost:8080/api/proyectos' : 'http://localhost:8080/api/grupos-estudio';
+      let url = tipo === 'proyecto' ? 'https://study-match-backend-zw6y.onrender.com/api/proyectos' : 'https://study-match-backend-zw6y.onrender.com/api/grupos-estudio';
       let bodyData = { titulo, descripcion, maximoIntegrantes: parseInt(maximoIntegrantes), grupoMateriaId: parseInt(grupoMateriaId) };
       
       if (tipo === 'proyecto') bodyData.fechaLimite = fechaLimite;
@@ -90,8 +90,8 @@ export default function Dashboard() {
     } 
     else if (accion === 'unirse') {
       let url = tipo === 'proyecto' 
-        ? `http://localhost:8080/api/proyectos/materia/${grupoMateriaId}` 
-        : `http://localhost:8080/api/grupos-estudio/materia/${grupoMateriaId}`;
+        ? `https://study-match-backend-zw6y.onrender.com/api/proyectos/materia/${grupoMateriaId}` 
+        : `https://study-match-backend-zw6y.onrender.com/api/grupos-estudio/materia/${grupoMateriaId}`;
 
       try {
         const response = await fetch(url, { 
@@ -120,7 +120,7 @@ export default function Dashboard() {
         grupoEstudioId: tipo === 'estudio' ? idDestino : null
       };
 
-      const res = await fetch('http://localhost:8080/api/solicitudes', {
+      const res = await fetch('https://study-match-backend-zw6y.onrender.com/api/solicitudes', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

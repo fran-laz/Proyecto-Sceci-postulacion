@@ -24,7 +24,7 @@ export default function Registro() {
     };
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch('https://study-match-backend-zw6y.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
