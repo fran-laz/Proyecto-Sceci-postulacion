@@ -13,4 +13,7 @@ public class ProyectoResponseDTO {
     private String nombreCreador;
     private String nombreMateria;
     private String numeroGrupo;
+    private String nombreDocente;
+    private String emailCreador;
+
 }

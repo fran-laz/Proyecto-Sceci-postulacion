@@ -4,11 +4,9 @@ import com.flazarte.study_match.dtos.grupo_estudio.GrupoEstudioRequestDTO;
 import com.flazarte.study_match.dtos.grupo_estudio.GrupoEstudioResponseDTO;
 import com.flazarte.study_match.services.GrupoEstudioService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,29 +19,29 @@ public class GrupoEstudioController {
     private GrupoEstudioService grupoEstudioService;
 
     @PostMapping
-    public ResponseEntity<?> crearGrupo(@RequestBody GrupoEstudioRequestDTO dto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String emailEstudianteLogueado = authentication.getName();
-
-        try {
-            GrupoEstudioResponseDTO nuevoGrupo = grupoEstudioService.crearGrupoEstudio(dto, emailEstudianteLogueado);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoGrupo);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<GrupoEstudioResponseDTO> crearGrupo(@RequestBody GrupoEstudioRequestDTO dto) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(grupoEstudioService.crearGrupoEstudio(dto, email));
     }
 
-    @GetMapping
-    public ResponseEntity<List<GrupoEstudioResponseDTO>> listarGrupos() {
-        List<GrupoEstudioResponseDTO> grupos = grupoEstudioService.obtenerTodosLosGrupos();
-        return ResponseEntity.ok(grupos);
-    }
     @GetMapping("/mis-grupos")
-    public ResponseEntity<List<GrupoEstudioResponseDTO>> misGrupos() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String emailLogueado = authentication.getName();
+    public ResponseEntity<List<GrupoEstudioResponseDTO>> obtenerMisGrupos() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(grupoEstudioService.obtenerGruposPorEstudiante(email));
+    }
 
-        List<GrupoEstudioResponseDTO> misGrupos = grupoEstudioService.obtenerGruposPorEstudiante(emailLogueado);
-        return ResponseEntity.ok(misGrupos);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
+        grupoEstudioService.eliminarGrupo(id);
+        return ResponseEntity.ok("Eliminado correctamente");
+    }
+
+    @GetMapping("/materia/{grupoMateriaId}")
+    public ResponseEntity<List<GrupoEstudioResponseDTO>> disponibles(@PathVariable Long grupoMateriaId) {
+        return ResponseEntity.ok(grupoEstudioService.obtenerDisponiblesPorMateria(grupoMateriaId));
+    }
+    @GetMapping("/{id}/integrantes")
+    public ResponseEntity<List<String>> verIntegrantes(@PathVariable Long id) {
+        return ResponseEntity.ok(grupoEstudioService.obtenerIntegrantes(id));
     }
 }

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 
 export default function Dashboard() {
-  const [accion, setAccion] = useState(''); 
   const [tipo, setTipo] = useState('');
+  const [accion, setAccion] = useState(''); 
   const [carreraId, setCarreraId] = useState('');
   const [semestreSeleccionado, setSemestreSeleccionado] = useState('');
   const [materiaId, setMateriaId] = useState('');
@@ -10,27 +10,23 @@ export default function Dashboard() {
 
   const [listaMaterias, setListaMaterias] = useState([]);
   const [listaGrupos, setListaGrupos] = useState([]);
+  const [disponibles, setDisponibles] = useState([]);
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [maximoIntegrantes, setMaximoIntegrantes] = useState('');
-
   const [fechaLimite, setFechaLimite] = useState('');
-
   const [modalidad, setModalidad] = useState('');
   const [horarioHabitual, setHorarioHabitual] = useState('');
 
   const token = localStorage.getItem('token');
-
   useEffect(() => {
     if (carreraId) {
       fetch(`http://localhost:8080/api/materias?carreraId=${carreraId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
-        .then(data => {
-          setListaMaterias(data);
-        })
-        .catch(err => console.error("Error cargando materias:", err));
+        .then(data => setListaMaterias(data))
+        .catch(err => console.error(err));
     }
   }, [carreraId, token]);
 
@@ -40,83 +36,106 @@ export default function Dashboard() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => res.json())
-        .then(data => {
-          setListaGrupos(data);
-        })
-        .catch(err => console.error("Error cargando grupos:", err));
+        .then(data => setListaGrupos(data))
+        .catch(err => console.error(err));
     }
   }, [materiaId, carreraId, token]);
-
   const handleTipoChange = (nuevoTipo) => {
-    setTipo(nuevoTipo);
-    setCarreraId('');
-    setSemestreSeleccionado('');
-    setMateriaId('');
-    setGrupoMateriaId('');
-    setListaGrupos([]);
+    setTipo(nuevoTipo); setAccion(''); setCarreraId(''); setSemestreSeleccionado('');
+    setMateriaId(''); setGrupoMateriaId(''); setListaGrupos([]); setDisponibles([]);
+  };
+
+  const handleAccionChange = (nuevaAccion) => {
+    setAccion(nuevaAccion); setCarreraId(''); setSemestreSeleccionado('');
+    setMateriaId(''); setGrupoMateriaId(''); setListaGrupos([]); setDisponibles([]);
   };
 
   const handleCarreraChange = (id) => {
-    setCarreraId(id);
-    setSemestreSeleccionado('');
-    setMateriaId('');
-    setGrupoMateriaId('');
-    setListaGrupos([]);
+    setCarreraId(id); setSemestreSeleccionado(''); setMateriaId('');            
+    setGrupoMateriaId(''); setListaGrupos([]); setDisponibles([]);
   };
 
   const handleSemestreChange = (semestre) => {
-    setSemestreSeleccionado(semestre);
-    setMateriaId('');
-    setGrupoMateriaId('');
-    setListaGrupos([]);
+    setSemestreSeleccionado(semestre); setMateriaId('');            
+    setGrupoMateriaId(''); setListaGrupos([]); setDisponibles([]);
   };
 
   const handleMateriaChange = (id) => {
-    setMateriaId(id);
-    setGrupoMateriaId('');
+    setMateriaId(id); setGrupoMateriaId(''); setDisponibles([]);
   };
 
   const semestresUnicos = [...new Set(listaMaterias.map(m => m.semestre))].filter(Boolean);
   const materiasFiltradas = listaMaterias.filter(m => m.semestre === semestreSeleccionado);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let url = '';
-    let bodyData = {
-      titulo,
-      descripcion,
-      maximoIntegrantes: parseInt(maximoIntegrantes),
-      grupoMateriaId: parseInt(grupoMateriaId)
-    };
+    if (accion === 'crear') {
+      let url = tipo === 'proyecto' ? 'http://localhost:8080/api/proyectos' : 'http://localhost:8080/api/grupos-estudio';
+      let bodyData = { titulo, descripcion, maximoIntegrantes: parseInt(maximoIntegrantes), grupoMateriaId: parseInt(grupoMateriaId) };
+      
+      if (tipo === 'proyecto') bodyData.fechaLimite = fechaLimite;
+      else { bodyData.modalidad = modalidad; bodyData.horarioHabitual = horarioHabitual; }
 
-    if (tipo === 'proyecto') {
-      url = 'http://localhost:8080/api/proyectos';
-      bodyData.fechaLimite = fechaLimite;
-    } else {
-      url = 'http://localhost:8080/api/grupos-estudio';
-      bodyData.modalidad = modalidad;
-      bodyData.horarioHabitual = horarioHabitual;
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(bodyData)
+        });
+        if (response.ok) alert(`¡${tipo === 'proyecto' ? 'Proyecto' : 'Grupo de Estudio'} creado exitosamente!`);
+        else alert("Ocurrió un error al crear. Revisa los datos.");
+      } catch (error) {
+        alert("Error de conexión con el servidor.");
+      }
+    } 
+    else if (accion === 'unirse') {
+      let url = tipo === 'proyecto' 
+        ? `http://localhost:8080/api/proyectos/materia/${grupoMateriaId}` 
+        : `http://localhost:8080/api/grupos-estudio/materia/${grupoMateriaId}`;
+
+      try {
+        const response = await fetch(url, { 
+          headers: { 'Authorization': `Bearer ${token}` } 
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setDisponibles(data); 
+          
+          if(data.length === 0) {
+            alert("No hay grupos o proyectos creados para este docente aún.");
+          }
+        }
+      } catch (error) {
+        alert("Error de conexión al buscar.");
+      }
     }
+  };
 
+  const handleSolicitarUnirme = async (idDestino) => {
     try {
-      const response = await fetch(url, {
+      const bodyData = {
+        mensajePostulacion: "Hola, me gustaría unirme a tu equipo de trabajo.",
+        proyectoId: tipo === 'proyecto' ? idDestino : null,
+        grupoEstudioId: tipo === 'estudio' ? idDestino : null
+      };
+
+      const res = await fetch('http://localhost:8080/api/solicitudes', {
         method: 'POST',
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify(bodyData)
       });
-
-      if (response.ok) {
-        alert(`¡${tipo === 'proyecto' ? 'Proyecto' : 'Grupo de Estudio'} creado exitosamente!`);
+      
+      if (res.ok) {
+        alert("¡Solicitud enviada al creador correctamente!");
       } else {
-        alert("Ocurrió un error al crear. Revisa los datos.");
+        alert("No se pudo enviar la solicitud. Revisa que no pertenezcas al grupo.");
       }
-    } catch (error) {
-      console.error("Error de conexión:", error);
-      alert("Error de conexión con el servidor.");
+    } catch (err) { 
+      alert("Error de red al intentar enviar la solicitud."); 
     }
   };
 
@@ -126,83 +145,41 @@ export default function Dashboard() {
         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Panel Principal</h2>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          
           <div style={styles.inputGroup}>
-            <label style={styles.label}>1. ¿Qué deseas hacer?</label>
+            <label style={styles.label}>1. ¿Qué estás buscando?</label>
             <div style={styles.buttonGrid}>
-              <button 
-                type="button" 
-                onClick={() => setAccion('crear')} 
-                style={accion === 'crear' ? styles.buttonActive : styles.buttonInactive}
-              >
-                Crear uno nuevo
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setAccion('unirse')} 
-                style={accion === 'unirse' ? styles.buttonActive : styles.buttonInactive}
-              >
-                Unirse a uno existente
-              </button>
+              <button type="button" onClick={() => handleTipoChange('estudio')} style={tipo === 'estudio' ? styles.buttonActive : styles.buttonInactive}>Grupo de Estudio</button>
+              <button type="button" onClick={() => handleTipoChange('proyecto')} style={tipo === 'proyecto' ? styles.buttonActive : styles.buttonInactive}>Proyecto de Clase</button>
             </div>
           </div>
 
-          {accion && (
+          {tipo && (
             <div style={styles.inputGroup}>
-              <label style={styles.label}>2. ¿De qué tipo?</label>
+              <label style={styles.label}>2. ¿Qué deseas hacer?</label>
               <div style={styles.buttonGrid}>
-                <button 
-                  type="button" 
-                  onClick={() => handleTipoChange('proyecto')} 
-                  style={tipo === 'proyecto' ? styles.buttonActive : styles.buttonInactive}
-                >
-                  Proyecto de Clase
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => handleTipoChange('estudio')} 
-                  style={tipo === 'estudio' ? styles.buttonActive : styles.buttonInactive}
-                >
-                  Grupo de Estudio
-                </button>
+                <button type="button" onClick={() => handleAccionChange('crear')} style={accion === 'crear' ? styles.buttonActive : styles.buttonInactive}>Crear uno nuevo</button>
+                <button type="button" onClick={() => handleAccionChange('unirse')} style={accion === 'unirse' ? styles.buttonActive : styles.buttonInactive}>Unirse a uno existente</button>
               </div>
             </div>
           )}
 
-          {tipo && (
+          {accion && (
             <div style={styles.inputGroup}>
               <label style={styles.label}>3. Selecciona tu Carrera:</label>
               <div style={styles.buttonGrid}>
-                <button 
-                  type="button" 
-                  onClick={() => handleCarreraChange("1")} 
-                  style={carreraId === "1" ? styles.buttonActive : styles.buttonInactive}
-                >
-                  Ingeniería Informática
-                </button>
-                <button 
-                  type="button" 
-                  onClick={() => handleCarreraChange("2")} 
-                  style={carreraId === "2" ? styles.buttonActive : styles.buttonInactive}
-                >
-                  Ingeniería de Sistemas
-                </button>
+                <button type="button" onClick={() => handleCarreraChange("1")} style={carreraId === "1" ? styles.buttonActive : styles.buttonInactive}>Ingeniería Informática</button>
+                <button type="button" onClick={() => handleCarreraChange("2")} style={carreraId === "2" ? styles.buttonActive : styles.buttonInactive}>Ingeniería de Sistemas</button>
               </div>
             </div>
           )}
 
           {carreraId && listaMaterias.length > 0 && (
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Selecciona el Semestre:</label>
+              <label style={styles.label}>4. Selecciona el Semestre:</label>
               <div style={styles.buttonGrid}>
                 {semestresUnicos.map((semestre) => (
-                  <button 
-                    key={semestre} 
-                    type="button" 
-                    onClick={() => handleSemestreChange(semestre)} 
-                    style={semestreSeleccionado === semestre ? styles.buttonActive : styles.buttonInactive}
-                  >
-                    Semestre {semestre}
-                  </button>
+                  <button key={semestre} type="button" onClick={() => handleSemestreChange(semestre)} style={semestreSeleccionado === semestre ? styles.buttonActive : styles.buttonInactive}>Semestre {semestre}</button>
                 ))}
               </div>
             </div>
@@ -210,91 +187,73 @@ export default function Dashboard() {
 
           {semestreSeleccionado && (
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Selecciona la Materia:</label>
+              <label style={styles.label}>5. Selecciona la Materia:</label>
               <div style={styles.buttonGrid}>
                 {materiasFiltradas.map((m) => (
-                  <button 
-                    key={m.id} 
-                    type="button" 
-                    onClick={() => handleMateriaChange(m.id)} 
-                    style={materiaId === m.id ? styles.buttonActive : styles.buttonInactive}
-                  >
-                    {m.nombre}
-                  </button>
+                  <button key={m.id} type="button" onClick={() => handleMateriaChange(m.id)} style={materiaId === m.id ? styles.buttonActive : styles.buttonInactive}>{m.nombre}</button>
                 ))}
               </div>
             </div>
           )}
 
-
           {materiaId && (
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Selecciona el Grupo/Docente:</label>
-              <select style={styles.select} value={grupoMateriaId} onChange={(e) => setGrupoMateriaId(e.target.value)} required>
+              <label style={styles.label}>6. Selecciona el Grupo/Docente:</label>
+              <select style={styles.select} value={grupoMateriaId} onChange={(e) => {setGrupoMateriaId(e.target.value); setDisponibles([]);}} required>
                 <option value="">-- Selecciona un docente --</option>
                 {listaGrupos.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    Grupo {g.numeroGrupo} - {g.nombreDocente}
-                  </option>
+                  <option key={g.id} value={g.id}>Grupo {g.numeroGrupo} - {g.nombreDocente}</option>
                 ))}
               </select>
             </div>
           )}
 
-
           {grupoMateriaId && accion === 'crear' && (
             <div style={styles.finalBox}>
-              <h4 style={{ marginBottom: '15px' }}>Detalles del {tipo === 'proyecto' ? 'Proyecto' : 'Grupo de Estudio'}</h4>
-              
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Título:</label>
-                <input type="text" style={styles.input} required value={titulo} onChange={(e) => setTitulo(e.target.value)} />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Descripción:</label>
-                <textarea style={{ ...styles.input, height: '60px' }} required value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label style={styles.label}>Máximo de Integrantes:</label>
-                <input type="number" min="2" max="10" style={styles.input} required value={maximoIntegrantes} onChange={(e) => setMaximoIntegrantes(e.target.value)} />
-              </div>
-
-              {tipo === 'proyecto' && (
-                <div style={styles.inputGroup}>
-                  <label style={styles.label}>Fecha Límite:</label>
-                  <input type="date" style={styles.input} required value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)} />
-                </div>
-              )}
-
+              <h4 style={{ marginBottom: '15px' }}>Detalles del Nuevo {tipo === 'proyecto' ? 'Proyecto' : 'Grupo de Estudio'}</h4>
+              <div style={styles.inputGroup}><label style={styles.label}>Título:</label><input type="text" style={styles.input} required value={titulo} onChange={(e) => setTitulo(e.target.value)} /></div>
+              <div style={styles.inputGroup}><label style={styles.label}>Descripción:</label><textarea style={{ ...styles.input, height: '60px' }} required value={descripcion} onChange={(e) => setDescripcion(e.target.value)} /></div>
+              <div style={styles.inputGroup}><label style={styles.label}>Máximo Integrantes:</label><input type="number" min="2" max="10" style={styles.input} required value={maximoIntegrantes} onChange={(e) => setMaximoIntegrantes(e.target.value)} /></div>
+              {tipo === 'proyecto' && (<div style={styles.inputGroup}><label style={styles.label}>Fecha Límite:</label><input type="date" style={styles.input} required value={fechaLimite} onChange={(e) => setFechaLimite(e.target.value)} /></div>)}
               {tipo === 'estudio' && (
                 <>
                   <div style={styles.inputGroup}>
                     <label style={styles.label}>Modalidad:</label>
                     <select style={styles.select} required value={modalidad} onChange={(e) => setModalidad(e.target.value)}>
-                      <option value="">-- Selecciona modalidad --</option>
-                      <option value="Presencial">Presencial</option>
-                      <option value="Virtual">Virtual</option>
-                      <option value="Híbrida">Híbrida</option>
+                      <option value="">-- Selecciona --</option><option value="Presencial">Presencial</option><option value="Virtual">Virtual</option><option value="Híbrida">Híbrida</option>
                     </select>
                   </div>
-                  <div style={styles.inputGroup}>
-                    <label style={styles.label}>Horario Habitual:</label>
-                    <input type="text" placeholder="Ej: Jueves a las 14:15" style={styles.input} required value={horarioHabitual} onChange={(e) => setHorarioHabitual(e.target.value)} />
-                  </div>
+                  <div style={styles.inputGroup}><label style={styles.label}>Horario Habitual:</label><input type="text" placeholder="Ej: Jueves a las 14:15" style={styles.input} required value={horarioHabitual} onChange={(e) => setHorarioHabitual(e.target.value)} /></div>
                 </>
               )}
             </div>
           )}
 
           {grupoMateriaId && (
-            <button type="submit" style={styles.button}>
+            <button type="submit" style={accion === 'crear' ? styles.buttonCreate : styles.buttonSearch}>
               {accion === 'crear' ? 'Confirmar Creación' : 'Ver Disponibles'}
             </button>
           )}
 
         </form>
+
+        {accion === 'unirse' && disponibles.length > 0 && (
+          <div style={styles.resultsBox}>
+            <h3 style={{marginBottom: '15px'}}>Resultados Encontrados:</h3>
+            {disponibles.map(item => (
+              <div key={item.id} style={styles.resultCard}>
+                <h4>{item.titulo}</h4>
+                <p style={styles.descText}>{item.descripcion}</p>
+                <p style={styles.materiaText}><strong>Docente:</strong> {item.nombreDocente}</p>
+                <p style={styles.materiaText}><strong>Creador:</strong> {item.nombreCreador}</p>
+                <button type="button" onClick={() => handleSolicitarUnirme(item.id)} style={styles.buttonJoin}>
+                    Solicitar Unirme
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -302,36 +261,22 @@ export default function Dashboard() {
 
 const styles = {
   container: { display: 'flex', justifyContent: 'center', marginTop: '30px', paddingBottom: '50px' },
-  card: { background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '550px' }, 
+  card: { background: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '550px' },
   form: { display: 'flex', flexDirection: 'column' },
   inputGroup: { marginBottom: '15px', display: 'flex', flexDirection: 'column' },
-  label: { fontWeight: 'bold', color: '#444', marginBottom: '8px' }, 
+  label: { fontWeight: 'bold', color: '#444', marginBottom: '8px' },
   select: { padding: '10px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '15px' },
   input: { padding: '10px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '15px' },
   finalBox: { background: '#f8f9fa', padding: '15px', borderRadius: '6px', border: '1px solid #e9ecef', marginBottom: '15px', marginTop: '10px' },
-  button: { padding: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' },
-  
+  buttonCreate: { padding: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' },
+  buttonSearch: { padding: '12px', background: '#0d6efd', color: 'white', border: 'none', borderRadius: '4px', fontSize: '16px', cursor: 'pointer', fontWeight: 'bold' },
   buttonGrid: { display: 'flex', flexWrap: 'wrap', gap: '8px' },
-  buttonInactive: { 
-    padding: '8px 14px', 
-    background: '#f8f9fa', 
-    border: '1px solid #ced4da', 
-    borderRadius: '6px', 
-    cursor: 'pointer', 
-    color: '#495057', 
-    fontSize: '14px',
-    transition: 'all 0.2s' 
-  },
-  buttonActive: { 
-    padding: '8px 14px', 
-    background: '#0d6efd',
-    border: '1px solid #0d6efd', 
-    borderRadius: '6px', 
-    cursor: 'pointer', 
-    color: 'white', 
-    fontWeight: 'bold',
-    fontSize: '14px',
-    transition: 'all 0.2s', 
-    boxShadow: '0 2px 4px rgba(13, 110, 253, 0.3)' 
-  }
+  buttonInactive: { padding: '8px 14px', background: '#f8f9fa', border: '1px solid #ced4da', borderRadius: '6px', cursor: 'pointer', color: '#495057', fontSize: '14px', transition: 'all 0.2s' },
+  buttonActive: { padding: '8px 14px', background: '#0d6efd', border: '1px solid #0d6efd', borderRadius: '6px', cursor: 'pointer', color: 'white', fontWeight: 'bold', fontSize: '14px', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(13, 110, 253, 0.3)' },
+
+  resultsBox: { marginTop: '20px', borderTop: '2px solid #eee', paddingTop: '20px' },
+  resultCard: { border: '1px solid #ddd', padding: '15px', borderRadius: '6px', marginBottom: '10px', background: '#f8f9fa' },
+  descText: { fontSize: '14px', color: '#555', marginBottom: '8px' },
+  materiaText: { fontSize: '13px', color: '#0056b3', margin: '3px 0' },
+  buttonJoin: { marginTop: '10px', padding: '8px 12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }
 };

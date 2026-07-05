@@ -11,4 +11,8 @@ public class SolicitudResponseDTO {
     private String estado;
     private String tipoPublicacion;
     private String tituloPublicacion;
+    private String nombreRemitente;
+    private String tipo;
+    private String tituloDestino;
+    private String emailCreador;
 }

@@ -10,9 +10,9 @@ public class GrupoEstudioResponseDTO {
     private Integer maximoIntegrantes;
     private String modalidad;
     private String horarioHabitual;
-
-    // Textos limpios extraídos de las relaciones
     private String nombreCreador;
     private String nombreMateria;
     private String numeroGrupo;
+    private String nombreDocente;
+    private String emailCreador;
 }

@@ -5,16 +5,17 @@ import com.flazarte.study_match.dtos.grupo_estudio.GrupoEstudioResponseDTO;
 import com.flazarte.study_match.models.GrupoEstudio;
 import com.flazarte.study_match.models.GrupoMateria;
 import com.flazarte.study_match.models.Perfil;
+import com.flazarte.study_match.models.Usuario;
 import com.flazarte.study_match.repositories.GrupoEstudioRepository;
 import com.flazarte.study_match.repositories.GrupoMateriaRepository;
 import com.flazarte.study_match.repositories.PerfilRepository;
+import com.flazarte.study_match.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import com.flazarte.study_match.models.Usuario;
-import com.flazarte.study_match.repositories.UsuarioRepository;
+
 @Service
 public class GrupoEstudioService {
 
@@ -26,9 +27,9 @@ public class GrupoEstudioService {
 
     @Autowired
     private GrupoMateriaRepository grupoMateriaRepository;
+
     @Autowired
     private UsuarioRepository usuarioRepository;
-
 
     public GrupoEstudioResponseDTO crearGrupoEstudio(GrupoEstudioRequestDTO dto, String emailUsuario) {
         Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
@@ -37,13 +38,13 @@ public class GrupoEstudioService {
                 .orElseThrow(() -> new RuntimeException("Error: Perfil del creador no encontrado"));
         GrupoMateria grupoMateria = grupoMateriaRepository.findById(dto.getGrupoMateriaId())
                 .orElseThrow(() -> new RuntimeException("Error: Paralelo/Materia no encontrado"));
+
         GrupoEstudio grupo = new GrupoEstudio();
         grupo.setTitulo(dto.getTitulo());
         grupo.setDescripcion(dto.getDescripcion());
         grupo.setMaximoIntegrantes(dto.getMaximoIntegrantes());
         grupo.setModalidad(dto.getModalidad());
         grupo.setHorarioHabitual(dto.getHorarioHabitual());
-
         grupo.setCreador(creador);
         grupo.setGrupoMateria(grupoMateria);
 
@@ -55,6 +56,29 @@ public class GrupoEstudioService {
     public List<GrupoEstudioResponseDTO> obtenerTodosLosGrupos() {
         return grupoEstudioRepository.findAll().stream()
                 .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<GrupoEstudioResponseDTO> obtenerGruposPorEstudiante(String email) {
+        return grupoEstudioRepository.findMisGruposYParticipaciones(email).stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public void eliminarGrupo(Long id) {
+        grupoEstudioRepository.deleteById(id);
+    }
+
+    public List<GrupoEstudioResponseDTO> obtenerDisponiblesPorMateria(Long grupoMateriaId) {
+        return grupoEstudioRepository.findByGrupoMateriaId(grupoMateriaId).stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<String> obtenerIntegrantes(Long id) {
+        GrupoEstudio g = grupoEstudioRepository.findById(id).orElseThrow();
+        return g.getIntegrantes().stream()
+                .map(perfil -> perfil.getNombres() + " " + perfil.getApellidos())
                 .collect(Collectors.toList());
     }
 
@@ -70,25 +94,8 @@ public class GrupoEstudioService {
         dto.setNombreCreador(grupo.getCreador().getNombres() + " " + grupo.getCreador().getApellidos());
         dto.setNombreMateria(grupo.getGrupoMateria().getMateria().getNombre());
         dto.setNumeroGrupo(grupo.getGrupoMateria().getNumeroGrupo());
-
+        dto.setNombreDocente(grupo.getGrupoMateria().getNombreDocente());
+        dto.setEmailCreador(grupo.getCreador().getUsuario().getEmail());
         return dto;
-    }
-    public List<GrupoEstudioResponseDTO> obtenerGruposPorEstudiante(String email) {
-        List<GrupoEstudio> grupos = grupoEstudioRepository.findByCreador_Usuario_Email(email);
-        return grupos.stream().map(grupo -> {
-            GrupoEstudioResponseDTO dto = new GrupoEstudioResponseDTO();
-            dto.setId(grupo.getId());
-            dto.setTitulo(grupo.getTitulo());
-            dto.setDescripcion(grupo.getDescripcion());
-            dto.setMaximoIntegrantes(grupo.getMaximoIntegrantes());
-            dto.setModalidad(grupo.getModalidad());
-            dto.setHorarioHabitual(grupo.getHorarioHabitual());
-
-            dto.setNombreCreador(grupo.getCreador().getNombres() + " " + grupo.getCreador().getApellidos());
-            dto.setNombreMateria(grupo.getGrupoMateria().getMateria().getNombre());
-            dto.setNumeroGrupo(grupo.getGrupoMateria().getNumeroGrupo());
-
-            return dto;
-        }).toList();
     }
 }

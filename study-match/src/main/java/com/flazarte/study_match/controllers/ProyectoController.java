@@ -4,9 +4,7 @@ import com.flazarte.study_match.dtos.proyecto.ProyectoRequestDTO;
 import com.flazarte.study_match.dtos.proyecto.ProyectoResponseDTO;
 import com.flazarte.study_match.services.ProyectoService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,23 +19,29 @@ public class ProyectoController {
     private ProyectoService proyectoService;
 
     @PostMapping
-    public ResponseEntity<?> crearProyecto(@RequestBody ProyectoRequestDTO dto) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String emailEstudianteLogueado = authentication.getName();
-
-        try {
-            ProyectoResponseDTO proyectoCreado = proyectoService.crearProyecto(dto, emailEstudianteLogueado);
-            return ResponseEntity.status(HttpStatus.CREATED).body(proyectoCreado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
+    public ResponseEntity<ProyectoResponseDTO> crearProyecto(@RequestBody ProyectoRequestDTO dto) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(proyectoService.crearProyecto(dto, email));
     }
-    @GetMapping("/mis-proyectos")
-    public ResponseEntity<List<ProyectoResponseDTO>> misProyectos() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String emailLogueado = authentication.getName();
 
-        List<ProyectoResponseDTO> misProyectos = proyectoService.obtenerProyectosPorEstudiante(emailLogueado);
-        return ResponseEntity.ok(misProyectos);
+    @GetMapping("/mis-proyectos")
+    public ResponseEntity<List<ProyectoResponseDTO>> obtenerMisProyectos() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ResponseEntity.ok(proyectoService.obtenerProyectosPorEstudiante(email));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
+        proyectoService.eliminarProyecto(id);
+        return ResponseEntity.ok("Eliminado correctamente");
+    }
+
+    @GetMapping("/materia/{grupoMateriaId}")
+    public ResponseEntity<List<ProyectoResponseDTO>> disponibles(@PathVariable Long grupoMateriaId) {
+        return ResponseEntity.ok(proyectoService.obtenerDisponiblesPorMateria(grupoMateriaId));
+    }
+    @GetMapping("/{id}/integrantes")
+    public ResponseEntity<List<String>> verIntegrantes(@PathVariable Long id) {
+        return ResponseEntity.ok(proyectoService.obtenerIntegrantes(id));
     }
 }

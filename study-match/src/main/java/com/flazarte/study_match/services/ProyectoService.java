@@ -32,13 +32,10 @@ public class ProyectoService {
     private UsuarioRepository usuarioRepository;
 
     public ProyectoResponseDTO crearProyecto(ProyectoRequestDTO dto, String emailUsuario) {
-
         Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
                 .orElseThrow(() -> new RuntimeException("Error: Cuenta de usuario no encontrada"));
-
         Perfil creador = perfilRepository.findByUsuario(usuario)
                 .orElseThrow(() -> new RuntimeException("Error: Perfil del creador no encontrado"));
-
         GrupoMateria grupoMateria = grupoMateriaRepository.findById(dto.getGrupoMateriaId())
                 .orElseThrow(() -> new RuntimeException("Error: Paralelo/Materia no encontrado"));
 
@@ -47,15 +44,39 @@ public class ProyectoService {
         proyecto.setDescripcion(dto.getDescripcion());
         proyecto.setMaximoIntegrantes(dto.getMaximoIntegrantes());
         proyecto.setFechaLimite(dto.getFechaLimite());
-        proyecto.setCreador(creador); 
+        proyecto.setCreador(creador);
         proyecto.setGrupoMateria(grupoMateria);
         Proyecto proyectoGuardado = proyectoRepository.save(proyecto);
+
         return convertirADTO(proyectoGuardado);
     }
 
     public List<ProyectoResponseDTO> obtenerTodosLosProyectos() {
         return proyectoRepository.findAll().stream()
                 .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProyectoResponseDTO> obtenerProyectosPorEstudiante(String email) {
+        return proyectoRepository.findMisProyectosYParticipaciones(email).stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public void eliminarProyecto(Long id) {
+        proyectoRepository.deleteById(id);
+    }
+
+    public List<ProyectoResponseDTO> obtenerDisponiblesPorMateria(Long grupoMateriaId) {
+        return proyectoRepository.findByGrupoMateriaId(grupoMateriaId).stream()
+                .map(this::convertirADTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<String> obtenerIntegrantes(Long id) {
+        Proyecto p = proyectoRepository.findById(id).orElseThrow();
+        return p.getIntegrantes().stream()
+                .map(perfil -> perfil.getNombres() + " " + perfil.getApellidos())
                 .collect(Collectors.toList());
     }
 
@@ -70,24 +91,8 @@ public class ProyectoService {
         dto.setNombreCreador(proyecto.getCreador().getNombres() + " " + proyecto.getCreador().getApellidos());
         dto.setNombreMateria(proyecto.getGrupoMateria().getMateria().getNombre());
         dto.setNumeroGrupo(proyecto.getGrupoMateria().getNumeroGrupo());
-
+        dto.setNombreDocente(proyecto.getGrupoMateria().getNombreDocente());
+        dto.setEmailCreador(proyecto.getCreador().getUsuario().getEmail());
         return dto;
-    }
-    public List<ProyectoResponseDTO> obtenerProyectosPorEstudiante(String email) {
-        List<Proyecto> proyectos = proyectoRepository.findByCreador_Usuario_Email(email);
-
-        return proyectos.stream().map(proyecto -> {
-            ProyectoResponseDTO dto = new ProyectoResponseDTO();
-            dto.setId(proyecto.getId());
-            dto.setTitulo(proyecto.getTitulo());
-            dto.setDescripcion(proyecto.getDescripcion());
-            dto.setMaximoIntegrantes(proyecto.getMaximoIntegrantes());
-            dto.setFechaLimite(proyecto.getFechaLimite());
-            dto.setNombreCreador(proyecto.getCreador().getNombres() + " " + proyecto.getCreador().getApellidos());
-            dto.setNombreMateria(proyecto.getGrupoMateria().getMateria().getNombre());
-            dto.setNumeroGrupo(proyecto.getGrupoMateria().getNumeroGrupo());
-
-            return dto;
-        }).toList();
     }
 }

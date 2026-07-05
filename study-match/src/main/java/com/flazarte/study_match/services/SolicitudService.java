@@ -6,13 +6,18 @@ import com.flazarte.study_match.models.GrupoEstudio;
 import com.flazarte.study_match.models.Perfil;
 import com.flazarte.study_match.models.Proyecto;
 import com.flazarte.study_match.models.Solicitud;
+import com.flazarte.study_match.models.Usuario;
 import com.flazarte.study_match.repositories.GrupoEstudioRepository;
 import com.flazarte.study_match.repositories.PerfilRepository;
 import com.flazarte.study_match.repositories.ProyectoRepository;
 import com.flazarte.study_match.repositories.SolicitudRepository;
+import com.flazarte.study_match.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SolicitudService {
@@ -29,13 +34,18 @@ public class SolicitudService {
     @Autowired
     private GrupoEstudioRepository grupoEstudioRepository;
 
-    public SolicitudResponseDTO crearSolicitud(SolicitudRequestDTO dto) {
-        Perfil postulante = perfilRepository.findById(dto.getPostulanteId())
-                .orElseThrow(() -> new RuntimeException("Postulante no encontrado"));
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    public SolicitudResponseDTO crearSolicitud(SolicitudRequestDTO dto, String emailUsuario) {
+        Usuario usuario = usuarioRepository.findByEmail(emailUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Perfil postulante = perfilRepository.findByUsuario(usuario)
+                .orElseThrow(() -> new RuntimeException("Perfil del postulante no encontrado"));
 
         Solicitud solicitud = new Solicitud();
         solicitud.setPostulante(postulante);
-        solicitud.setMensajePostulacion(dto.getMensajePostulacion());
+        solicitud.setMensajePostulacion(dto.getMensajePostulacion() != null ? dto.getMensajePostulacion() : "Me gustaría unirme a tu equipo.");
         solicitud.setEstado("PENDIENTE");
 
         if (dto.getProyectoId() != null) {
@@ -51,15 +61,13 @@ public class SolicitudService {
         }
 
         Solicitud guardada = solicitudRepository.save(solicitud);
-        return convertirADTO(guardada);
+        return convertirParaBandeja(guardada);
     }
-
 
     @Transactional
     public SolicitudResponseDTO responderSolicitud(Long solicitudId, String respuesta) {
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
-
 
         if (!respuesta.equals("ACEPTADA") && !respuesta.equals("RECHAZADA")) {
             throw new RuntimeException("La respuesta debe ser ACEPTADA o RECHAZADA");
@@ -70,6 +78,10 @@ public class SolicitudService {
         if (respuesta.equals("ACEPTADA")) {
             if (solicitud.getProyecto() != null) {
                 Proyecto proyecto = solicitud.getProyecto();
+                if (proyecto.getIntegrantes() == null) {
+                    proyecto.setIntegrantes(new java.util.ArrayList<>());
+                }
+
                 if (proyecto.getIntegrantes().size() >= proyecto.getMaximoIntegrantes()) {
                     throw new RuntimeException("El proyecto ya está lleno");
                 }
@@ -78,6 +90,10 @@ public class SolicitudService {
 
             } else if (solicitud.getGrupoEstudio() != null) {
                 GrupoEstudio grupo = solicitud.getGrupoEstudio();
+                if (grupo.getIntegrantes() == null) {
+                    grupo.setIntegrantes(new java.util.ArrayList<>());
+                }
+
                 if (grupo.getIntegrantes().size() >= grupo.getMaximoIntegrantes()) {
                     throw new RuntimeException("El grupo de estudio ya está lleno");
                 }
@@ -87,6 +103,29 @@ public class SolicitudService {
         }
 
         return convertirADTO(solicitudRepository.save(solicitud));
+    }
+
+    public List<SolicitudResponseDTO> obtenerSolicitudesPendientesPorCreador(String email) {
+        return solicitudRepository.findAll().stream()
+                .filter(s -> s.getEstado().equals("PENDIENTE"))
+                .filter(s -> (s.getProyecto() != null && s.getProyecto().getCreador().getUsuario().getEmail().equals(email)) ||
+                        (s.getGrupoEstudio() != null && s.getGrupoEstudio().getCreador().getUsuario().getEmail().equals(email)))
+                .map(this::convertirParaBandeja)
+                .collect(Collectors.toList());
+    }
+
+    private SolicitudResponseDTO convertirParaBandeja(Solicitud solicitud) {
+        SolicitudResponseDTO dto = convertirADTO(solicitud);
+        dto.setNombreRemitente(solicitud.getPostulante().getNombres() + " " + solicitud.getPostulante().getApellidos());
+
+        if (solicitud.getProyecto() != null) {
+            dto.setTipo("proyecto");
+            dto.setTituloDestino(solicitud.getProyecto().getTitulo());
+        } else {
+            dto.setTipo("grupo");
+            dto.setTituloDestino(solicitud.getGrupoEstudio().getTitulo());
+        }
+        return dto;
     }
 
     private SolicitudResponseDTO convertirADTO(Solicitud solicitud) {
